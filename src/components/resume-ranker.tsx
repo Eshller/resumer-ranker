@@ -77,12 +77,12 @@ export default function ResumeRanker() {
       const file = files[i]
       try {
         const resumeText = await extractTextFromPDF(file)
-        const { output } = await computeMatchScore({
+        const result = await computeMatchScore({
           resumeText,
           jobDescription,
         })
 
-        if (output) {
+        if (result) {
           const fileUrl = URL.createObjectURL(file);
           newResults.push({
             id: file.name + Date.now(),
@@ -90,8 +90,8 @@ export default function ResumeRanker() {
             fileUrl,
             candidateName: extractName(resumeText),
             email: extractEmail(resumeText),
-            matchScore: output.matchScore,
-            topMatchedSkills: output.topMatchedSkills,
+            matchScore: result.matchScore,
+            topMatchedSkills: result.topMatchedSkills,
             resumeText,
           })
         }
