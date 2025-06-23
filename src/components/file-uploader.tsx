@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { UploadCloud, File, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
@@ -14,6 +14,10 @@ export function FileUploader({ onFilesChange, disabled }: FileUploaderProps) {
   const [files, setFiles] = useState<File[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const { toast } = useToast()
+
+  useEffect(() => {
+    onFilesChange(files)
+  }, [files, onFilesChange])
 
   const handleFileChange = useCallback((newFiles: FileList | null) => {
     if (disabled) return;
@@ -33,17 +37,15 @@ export function FileUploader({ onFilesChange, disabled }: FileUploaderProps) {
     
     setFiles((prevFiles) => {
         const updatedFiles = [...prevFiles, ...acceptedFiles];
-        onFilesChange(updatedFiles);
         return updatedFiles;
     });
 
-  }, [disabled, onFilesChange, toast]);
+  }, [disabled, toast]);
 
   const removeFile = (index: number) => {
     setFiles((prevFiles) => {
         const newFiles = [...prevFiles];
         newFiles.splice(index, 1);
-        onFilesChange(newFiles);
         return newFiles;
     });
   }
