@@ -34,9 +34,7 @@ const extractSkillsPrompt = ai.definePrompt({
   name: 'extractSkillsPrompt',
   input: {schema: ExtractSkillsInputSchema},
   output: {schema: ExtractSkillsOutputSchema},
-  prompt: `You are an AI expert in parsing resumes and identifying technical skills.
-
-  Given the following resume text, extract all relevant skills, especially technical skills like programming languages, software tools, and technologies.  Return a simple array of strings, with no additional commentary.
+  prompt: `You are an AI expert in parsing resumes. Given the following resume text, extract all relevant professional skills. This includes technical skills (e.g., programming languages, software), design skills (e.g., Figma, Sketch, UI/UX), and other relevant abilities. Return a simple array of strings, with no additional commentary.
 
   Resume Text:
   {{resumeText}}`,
