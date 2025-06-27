@@ -33,31 +33,17 @@ export async function computeMatchScore(input: ComputeMatchScoreInput): Promise<
   return computeMatchScoreFlow(input);
 }
 
-const extractKeywordsTool = ai.defineTool({
-  name: 'extractKeywords',
-  description: 'Extracts keywords from a given text.',
-  inputSchema: z.object({
-    text: z.string().describe('The text to extract keywords from.'),
-  }),
-  outputSchema: z.array(z.string()).describe('An array of keywords extracted from the text.'),
-}, async (input) => {
-  const {text} = input;
-  // Dummy implementation for keyword extraction - replace with actual logic
-  return text.split(/\s+/).slice(0, 5); // Returns first 5 words as keywords
-});
-
-
 const computeSimilarityPrompt = ai.definePrompt({
   name: 'computeSimilarityPrompt',
-  tools: [extractKeywordsTool],
   input: {schema: ComputeMatchScoreInputSchema},
   output: {schema: ComputeMatchScoreOutputSchema},
-  prompt: `You are an AI resume screener. Compute a match score between the resume and job description provided. 
+  prompt: `You are an AI resume screener. Your task is to compute a match score between the provided resume and job description.
 
-  First, use the extractKeywords tool to extract keywords from both the resume and the job description.
-  Second, compute a match score (0-100) based on the overlap of skills and keywords between the resume and the job description. 
-  Consider semantic similarity and keyword matching.
-  Third, identify the top 3 matched skills/keywords from the resume that are most relevant to the job description.
+  Analyze the resume text and the job description to determine how well the candidate's skills and experience align with the job requirements.
+
+  Based on your analysis, provide a match score from 0 to 100, where 100 is a perfect match. Also, identify the top 3 skills or keywords from the resume that are most relevant to the job description.
+
+  Consider semantic similarity, keyword overlap, and overall fit.
 
   Resume: {{{resumeText}}}
   Job Description: {{{jobDescription}}}
@@ -74,6 +60,9 @@ const computeMatchScoreFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await computeSimilarityPrompt(input);
-    return output!;
+    if (!output) {
+      throw new Error("The AI model failed to return a valid result.");
+    }
+    return output;
   }
 );
