@@ -9,13 +9,14 @@
  * - ExtractSkillsOutput - The return type for the extractSkills function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai, geminiAI, openaiAI } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const ExtractSkillsInputSchema = z.object({
   resumeText: z
     .string()
     .describe('The text content of the resume from which skills need to be extracted.'),
+  llmProvider: z.enum(['gemini', 'openai']).optional().default('gemini').describe('The LLM provider to use for analysis.'),
 });
 export type ExtractSkillsInput = z.infer<typeof ExtractSkillsInputSchema>;
 
@@ -30,16 +31,6 @@ export async function extractSkills(input: ExtractSkillsInput): Promise<ExtractS
   return extractSkillsFlow(input);
 }
 
-const extractSkillsPrompt = ai.definePrompt({
-  name: 'extractSkillsPrompt',
-  input: {schema: ExtractSkillsInputSchema},
-  output: {schema: ExtractSkillsOutputSchema},
-  prompt: `You are an AI expert in parsing resumes. Given the following resume text, extract all relevant professional skills. This includes technical skills (e.g., programming languages, software), design skills (e.g., Figma, Sketch, UI/UX), and other relevant abilities. Return a simple array of strings, with no additional commentary.
-
-  Resume Text:
-  {{resumeText}}`,
-});
-
 const extractSkillsFlow = ai.defineFlow(
   {
     name: 'extractSkillsFlow',
@@ -47,7 +38,20 @@ const extractSkillsFlow = ai.defineFlow(
     outputSchema: ExtractSkillsOutputSchema,
   },
   async input => {
-    const {output} = await extractSkillsPrompt(input);
+    // Select the appropriate AI instance based on the provider
+    const selectedAI = input.llmProvider === 'openai' ? openaiAI : geminiAI;
+
+    const extractSkillsPrompt = selectedAI.definePrompt({
+      name: 'extractSkillsPrompt',
+      input: { schema: ExtractSkillsInputSchema },
+      output: { schema: ExtractSkillsOutputSchema },
+      prompt: `You are an AI expert in parsing resumes. Given the following resume text, extract all relevant professional skills. This includes technical skills (e.g., programming languages, software), design skills (e.g., Figma, Sketch, UI/UX), and other relevant abilities. Return a simple array of strings, with no additional commentary.
+
+      Resume Text:
+      {{resumeText}}`,
+    });
+
+    const { output } = await extractSkillsPrompt(input);
     return output!;
   }
 );

@@ -8,11 +8,12 @@
  * - ExtractKeywordsFromJobDescriptionOutput - The return type for the extractKeywordsFromJobDescription function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai, geminiAI, openaiAI } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const ExtractKeywordsFromJobDescriptionInputSchema = z.object({
   jobDescription: z.string().describe('The job description to extract keywords from.'),
+  llmProvider: z.enum(['gemini', 'openai']).optional().default('gemini').describe('The LLM provider to use for analysis.'),
 });
 export type ExtractKeywordsFromJobDescriptionInput = z.infer<typeof ExtractKeywordsFromJobDescriptionInputSchema>;
 
@@ -27,20 +28,6 @@ export async function extractKeywordsFromJobDescription(
   return extractKeywordsFromJobDescriptionFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'extractKeywordsFromJobDescriptionPrompt',
-  input: {schema: ExtractKeywordsFromJobDescriptionInputSchema},
-  output: {schema: ExtractKeywordsFromJobDescriptionOutputSchema},
-  prompt: `You are an expert recruiter who is able to extract keywords from a job description.
-
-  Extract keywords from the following job description:
-
-  {{jobDescription}}
-
-  Return the keywords as a list of strings.
-  `,
-});
-
 const extractKeywordsFromJobDescriptionFlow = ai.defineFlow(
   {
     name: 'extractKeywordsFromJobDescriptionFlow',
@@ -48,7 +35,24 @@ const extractKeywordsFromJobDescriptionFlow = ai.defineFlow(
     outputSchema: ExtractKeywordsFromJobDescriptionOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    // Select the appropriate AI instance based on the provider
+    const selectedAI = input.llmProvider === 'openai' ? openaiAI : geminiAI;
+
+    const prompt = selectedAI.definePrompt({
+      name: 'extractKeywordsFromJobDescriptionPrompt',
+      input: { schema: ExtractKeywordsFromJobDescriptionInputSchema },
+      output: { schema: ExtractKeywordsFromJobDescriptionOutputSchema },
+      prompt: `You are an expert recruiter who is able to extract keywords from a job description.
+
+      Extract keywords from the following job description:
+
+      {{jobDescription}}
+
+      Return the keywords as a list of strings.
+      `,
+    });
+
+    const { output } = await prompt(input);
     return output!;
   }
 );

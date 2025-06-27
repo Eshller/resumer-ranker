@@ -5,6 +5,7 @@ import * as pdfjs from "pdfjs-dist"
 
 import { FileUploader } from "@/components/file-uploader"
 import { ResultsTable } from "@/components/results-table"
+import { LLMSelector } from "@/components/llm-selector"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -21,6 +22,7 @@ import { computeMatchScore } from "@/ai/flows/compute-match-score"
 export default function ResumeRanker() {
   const [files, setFiles] = useState<File[]>([])
   const [jobDescription, setJobDescription] = useState("")
+  const [selectedLLM, setSelectedLLM] = useState<'gemini' | 'openai'>('gemini')
   const [results, setResults] = useState<ResumeResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -70,7 +72,7 @@ export default function ResumeRanker() {
     setIsLoading(true)
     setProgress(0)
     setResults([])
-    
+
     const newResults: ResumeResult[] = []
 
     for (let i = 0; i < files.length; i++) {
@@ -80,6 +82,7 @@ export default function ResumeRanker() {
         const result = await computeMatchScore({
           resumeText,
           jobDescription,
+          llmProvider: selectedLLM,
         })
 
         if (result) {
@@ -106,7 +109,7 @@ export default function ResumeRanker() {
         setProgress(((i + 1) / files.length) * 100)
       }
     }
-    
+
     setResults(newResults)
     setIsLoading(false)
   }
@@ -133,6 +136,13 @@ export default function ResumeRanker() {
             </div>
           </div>
           <div className="mt-6">
+            <LLMSelector
+              selectedLLM={selectedLLM}
+              onLLMChange={setSelectedLLM}
+              disabled={isLoading}
+            />
+          </div>
+          <div className="mt-6">
             <Button
               size="lg"
               className="w-full font-bold text-lg"
@@ -151,20 +161,20 @@ export default function ResumeRanker() {
           </div>
           {isLoading && (
             <div className="mt-4 space-y-2">
-                <Progress value={progress} className="w-full" />
-                <p className="text-sm text-center text-muted-foreground">Processing {files.length} resume(s)...</p>
+              <Progress value={progress} className="w-full" />
+              <p className="text-sm text-center text-muted-foreground">Processing {files.length} resume(s)...</p>
             </div>
           )}
         </CardContent>
       </Card>
 
       {!isLoading && results.length === 0 && (
-         <Alert>
-            <Lightbulb className="h-4 w-4" />
-            <AlertTitle className="font-headline">How it works</AlertTitle>
-            <AlertDescription>
+        <Alert>
+          <Lightbulb className="h-4 w-4" />
+          <AlertTitle className="font-headline">How it works</AlertTitle>
+          <AlertDescription>
             This tool uses AI to analyze resumes against your job description. It extracts skills, calculates a semantic match score, and highlights top keywords to help you quickly identify the most promising candidates. All processing is done in your browser for privacy.
-            </AlertDescription>
+          </AlertDescription>
         </Alert>
       )}
 
