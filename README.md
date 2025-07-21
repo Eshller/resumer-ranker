@@ -97,6 +97,71 @@ npm run typecheck
 npm run lint
 ```
 
+## Docker Deployment
+
+### Quick Start with Docker
+
+1. **Build and run with Docker Compose**
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **Or use the deployment script**
+   ```bash
+   ./deploy.sh
+   ```
+
+3. **Manual Docker commands**
+   ```bash
+   # Build the image
+   docker build -t resumer-ranker .
+   
+   # Run the container
+   docker run -d --name resumer-ranker -p 3000:3000 resumer-ranker
+   ```
+
+### Environment Variables for Docker
+
+Create a `.env` file for Docker deployment:
+
+```env
+# Google AI (Gemini) API Key
+GOOGLE_AI_API_KEY=your_google_ai_api_key_here
+
+# OpenAI API Key
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Next.js settings
+NODE_ENV=production
+NEXT_TELEMETRY_DISABLED=1
+```
+
+Then update your `docker-compose.yml` to include the env file:
+
+```yaml
+services:
+  app:
+    # ... other config
+    env_file:
+      - .env
+```
+
+### Container Management
+
+```bash
+# Stop the container
+docker stop resumer-ranker
+
+# Remove the container
+docker rm resumer-ranker
+
+# View logs
+docker logs resumer-ranker
+
+# Access container shell
+docker exec -it resumer-ranker sh
+```
+
 ## License
 
 This project is licensed under the MIT License.
